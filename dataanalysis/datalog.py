@@ -276,28 +276,39 @@ class DataLogReader:
         )
         return DataLogIterator(self.buf, 12 + extraHeaderSize)
 
-def WPILogTypeToDtype(type: str) -> np.dtype:
+def WPILogToDtype(entry: StartRecordData):
     if entry.name == "systemTime" and entry.type == "int64":
-        dt = datetime.fromtimestamp(record.getInteger() / 1000000)
+        return np.datetime64
     if entry.type == "double":
-        print(f"  {record.getDouble()}")
+        return np.float64
     elif entry.type == "int64":
-        print(f"  {record.getInteger()}")
-    elif entry.type in ("string", "json"):
-        print(f"  '{record.getString()}'")
+        return np.int64
     elif entry.type == "boolean":
-        print(f"  {record.getBoolean()}")
-    elif entry.type == "boolean[]":
-        arr = record.getBooleanArray()
-    elif entry.type == "double[]":
-        arr = record.getDoubleArray()
-    elif entry.type == "float[]":
-        arr = record.getFloatArray()
-    elif entry.type == "int64[]":
-        arr = record.getIntegerArray()
-    elif entry.type == "string[]":
-        arr = record.getStringArray()
+        return np.bool_
+    else:
+        return np.object_
 
+def WPILogEntryToType(startRecord: StartRecordData, entry: DataLogRecord):
+    if startRecord.name == "systemTime" and startRecord.type == "int64":
+        return np.datetime64(record.getInteger() / 1000000)
+    if startRecord.type == "double":
+        return record.getDouble()
+    elif startRecord.type == "int64":
+        return record.getInteger()
+    elif startRecord.type in ("string", "json"):
+        return record.getString()
+    elif startRecord.type == "boolean":
+        return record.getBoolean()
+    elif startRecord.type == "boolean[]":
+        return np.array(ecord.getBooleanArray())
+    elif startRecord.type == "double[]":
+        return np.array(record.getDoubleArray())
+    elif startRecord.type == "float[]":
+        return np.array(record.getFloatArray())
+    elif startRecord.type == "int64[]":
+        return np.array(record.getIntegerArray())
+    elif startRecord.type == "string[]":
+        return np.array(record.getStringArray())
 
 if __name__ == "__main__":
     from datetime import datetime
@@ -358,6 +369,7 @@ if __name__ == "__main__":
                 print(f"<name='{entry.name}', type='{entry.type}'> [{timestamp}]")
 
                 try:
+                    print(WPILogTypeToDtype(entry.type))
                     # handle systemTime specially
                     if entry.name == "systemTime" and entry.type == "int64":
                         dt = datetime.fromtimestamp(record.getInteger() / 1000000)
@@ -388,4 +400,4 @@ if __name__ == "__main__":
                         arr = record.getStringArray()
                         print(f"  {arr}")
                 except TypeError as e:
-                    print("  invalid")
+                    raise e
