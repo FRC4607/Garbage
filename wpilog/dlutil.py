@@ -1,7 +1,7 @@
 from typing import Dict, Any, List, Tuple
 import pandas as pd
 import numpy as np
-from datalog import DataLogReader, StartRecordData, WPILogEntryToType, WPILogToDtype
+from wpilog.datalog import DataLogReader, StartRecordData, WPILogEntryToType, WPILogToDtype
     
 def WPILogToDataFrame(log: DataLogReader) -> pd.DataFrame:
     """
@@ -35,6 +35,7 @@ def WPILogToDataFrame(log: DataLogReader) -> pd.DataFrame:
 
     # Constrct a DF, flip it
     df = pd.DataFrame(rows, columns=["Timestamp", "Key", "Value"])
+    
     df = df.set_index("Timestamp")
     df = df.pivot(columns="Key", values="Value")
 
