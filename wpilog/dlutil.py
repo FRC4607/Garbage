@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from wpilog.datalog import DataLogReader, StartRecordData, WPILogEntryToType, WPILogToDtype
     
-def WPILogToDataFrame(log: DataLogReader) -> pd.DataFrame:
+def WPILogToDataFrame(log: DataLogReader, pivot: bool = False) -> pd.DataFrame:
     """
     Takes a DataLogReader as input and produces a pandas dataframe with timestamps as
     an index and log path names as columns.
@@ -33,10 +33,13 @@ def WPILogToDataFrame(log: DataLogReader) -> pd.DataFrame:
 
     print("Constructing dataframe...")
 
-    # Constrct a DF, flip it
+    # Constrct a DF, flip it if the user wants
     df = pd.DataFrame(rows, columns=["Timestamp", "Key", "Value"])
-    
     df = df.set_index("Timestamp")
+
+    if not pivot:
+        return df
+    
     df = df.pivot(columns="Key", values="Value")
 
     print("Converting number types to numbers. This may take a while...")
