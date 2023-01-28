@@ -1,18 +1,24 @@
 from typing import Dict, Any, List, Tuple
 import pandas as pd
 import numpy as np
-from wpilog.datalog import DataLogReader, StartRecordData, WPILogEntryToType, WPILogToDtype
-    
+from wpilog.datalog import (
+    DataLogReader,
+    StartRecordData,
+    WPILogEntryToType,
+    WPILogToDtype,
+)
+
+
 def WPILogToDataFrame(log: DataLogReader, pivot: bool = False) -> pd.DataFrame:
     """
     Takes a DataLogReader as input and produces a pandas dataframe with timestamps as
     an index and log path names as columns.
 
     Arguments:
-    log: The DataLogReader to read from.
+        log: The DataLogReader to read from.
 
     Returns:
-    A dataframe with data from the log file.
+        A dataframe with data from the log file.
     """
     # Define some variables
     startRecords: Dict[int, StartRecordData] = {}
@@ -28,7 +34,13 @@ def WPILogToDataFrame(log: DataLogReader, pivot: bool = False) -> pd.DataFrame:
             startRecords[startRecord.entry] = startRecord
         if not record.isControl():
             startRecord = startRecords[record.entry]
-            rows.append((record.timestamp, startRecord.name, WPILogEntryToType(startRecord, record)))
+            rows.append(
+                (
+                    record.timestamp,
+                    startRecord.name,
+                    WPILogEntryToType(startRecord, record),
+                )
+            )
             types[startRecord.name] = WPILogToDtype(startRecord.type)
 
     print("Constructing dataframe...")
@@ -39,7 +51,7 @@ def WPILogToDataFrame(log: DataLogReader, pivot: bool = False) -> pd.DataFrame:
 
     if not pivot:
         return df
-    
+
     df = df.pivot(columns="Key", values="Value")
 
     print("Converting number types to numbers. This may take a while...")
@@ -58,4 +70,4 @@ def WPILogToDataFrame(log: DataLogReader, pivot: bool = False) -> pd.DataFrame:
     types["systemTime"] = "datetime64[us]"
     df = df.astype(types)
 
-    return df        
+    return df

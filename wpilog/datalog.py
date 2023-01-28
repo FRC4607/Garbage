@@ -277,6 +277,7 @@ class DataLogReader:
         )
         return DataLogIterator(self.buf, 12 + extraHeaderSize)
 
+
 def WPILogToDtype(typeStr: str):
     if typeStr == "double":
         return np.float64
@@ -286,6 +287,7 @@ def WPILogToDtype(typeStr: str):
         return np.bool_
     else:
         return np.object_
+
 
 def WPILogEntryToType(startRecord: StartRecordData, entry: DataLogRecord):
     if startRecord.name == "systemTime" and startRecord.type == "int64":
@@ -308,6 +310,7 @@ def WPILogEntryToType(startRecord: StartRecordData, entry: DataLogRecord):
         return np.array(entry.getIntegerArray(), np.int64)
     elif startRecord.type == "string[]":
         return np.array(entry.getStringArray(), np.object_)
+
 
 if __name__ == "__main__":
     from datetime import datetime
