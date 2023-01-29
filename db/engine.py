@@ -1,4 +1,13 @@
 from sqlalchemy import create_engine
+from config.parse_args import args
+import sys
 
 # Creates the SQAlchemy engine from a DBURL.
-engine = create_engine("mysql+pymysql://root:4607@localhost/garbage?charset=utf8mb4")
+try:
+    engine = create_engine(args.database)
+except:
+    print(
+        f'Failed to connect to DB with url "{args.database}". Check your connection URL.',
+        file=sys.stderr,
+    )
+    sys.exit(1)
