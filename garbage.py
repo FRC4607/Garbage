@@ -20,6 +20,34 @@ import json
 import datetime
 
 
+@dataclass
+class LogFileInfo:
+    """A class that stores information from a log file's name."""
+
+    fileName: str = ""
+    dt: datetime.datetime = None
+    event: str = None
+    matchInfo: str = None
+
+
+def getInfoFromLogName(name: str) -> LogFileInfo:
+    # Split up the filename into its useful parts
+    parts = name.split("_")
+    temp = parts[-1]
+    del parts[-1]
+    parts.append(temp.split(".")[0])
+    # If this log was never updated with time/match info, exit.
+    if parts[1] == "TBD":
+        return LogFileInfo(fileName=name)
+    # Calculate this log's datetime
+    dt = datetime.datetime.strptime(f"{parts[1]}_{parts[2]}", "%Y%m%d_%H%M%S")
+    # If our log is just a datetime, return that.
+    if len(parts) == 3:
+        return LogFileInfo(fileName=name, dt=dt)
+    # Return the event ID and match info
+    return LogFileInfo(fileName=name, dt=dt, event=parts[3], matchInfo=parts[4])
+
+
 def analyze_and_upload(path: str):
     print(f'Starting analysis of "{path}".')
     # Open the log file and take its hash.
@@ -33,6 +61,9 @@ def analyze_and_upload(path: str):
     except:
         print(f"Opening of {path} failed. Skipping.")
         return
+
+    # Do this after we open the file to make sure the file format
+    info = getInfoFromLogName(os.path.basename(path))
 
     # Loop over each module/group and run its metrics.
     results: Dict[str, GroupInfo] = {}
@@ -73,13 +104,16 @@ def analyze_and_upload(path: str):
         jFilePath = ""
         jDict: Dict[str, Dict] = {"hash": file_hash.hex()}
         for key in results.keys():
-            jDict[key] = {"hash": results[key].hash.hex(), "metrics": results[key].metrics}
+            jDict[key] = {
+                "hash": results[key].hash.hex(),
+                "metrics": results[key].metrics,
+            }
 
         jString = json.dumps(jDict)
         if jString != "":
             jFilePath = os.path.join(
                 metricsPath,
-                f"{os.path.basename(path).replace('.', '_')}"
+                f"{info.fileName.replace('.', '_')}"
                 + "_"
                 + f"{str(datetime.datetime.today()).replace(' ', '_').replace('.', '-').replace(':', '-')}"
                 + ".json",
@@ -101,18 +135,23 @@ def analyze_and_upload(path: str):
                     Metric(
                         file_hash=file_hash,
                         metric_hash=results[group].hash,
-                        file_name=os.path.basename(path),
+                        file_name=info.fileName,
                         group=group,
                         metric=metric,
                         value=result,
                         stoplight=severity,
+                        log_timestamp=info.dt,
+                        event_key=info.event,
+                        match_info=info.matchInfo
                     )
                 )
         with Session(engine) as sess:
             sess.add_all(rows)
             sess.commit()
     except:
-        print(f"Addition of metrics of {path} to database failed. Metrics can be found in {jFilePath} (if blank, no JSON created).")
+        print(
+            f"Addition of metrics of {path} to database failed. Metrics can be found in {jFilePath} (if blank, no JSON created)."
+        )
 
     print(f'Analysis of "{path}" completed with {len(rows)} metrics computed.')
 

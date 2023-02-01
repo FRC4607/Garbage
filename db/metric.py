@@ -27,6 +27,11 @@ class Metric(Base):
     metric_timestamp: Mapped[datetime.datetime] = mapped_column(
         sqlalchemy.DateTime, nullable=False, server_default=sqlalchemy.func.now()
     )
+    log_timestamp: Mapped[datetime.datetime] = mapped_column(
+        sqlalchemy.DateTime
+    )
+    event_key: Mapped[str] = mapped_column(sqlalchemy.Unicode(256))
+    match_info: Mapped[str] = mapped_column(sqlalchemy.Unicode(16))
 
 
 Base.metadata.create_all(engine)
