@@ -24,79 +24,95 @@ def analyze_and_upload(path: str):
     print(f'Starting analysis of "{path}".')
     # Open the log file and take its hash.
     file_hash: bytes = bytes([])
-    with open(path, "r") as f:
-        mm = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
-        file_hash = hashlib.md5(mm).digest()
-        reader = DataLogReader(mm)
-        df = WPILogToDataFrame(reader)
+    try:
+        with open(path, "r") as f:
+            mm = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
+            file_hash = hashlib.md5(mm).digest()
+            reader = DataLogReader(mm)
+            df = WPILogToDataFrame(reader)
+    except:
+        print(f"Opening of {path} failed. Skipping.")
+        return
 
     # Loop over each module/group and run its metrics.
     results: Dict[str, GroupInfo] = {}
 
-    for group in groupsList:
-        # Reset the metrics dictionary
-        group.metrics = {}
+    try:
+        for group in groupsList:
+            # Reset the metrics dictionary
+            group.metrics = {}
 
-        # Check to see if we have already ran the same metrics on the same log.
-        with open(group.module.__file__, "rb") as f:
-            group.hash = hashlib.file_digest(f, "md5").digest()
-        with Session(engine) as sess:
-            statement = (
-                Select(Metric.id)
-                .where(Metric.file_hash == file_hash)
-                .where(Metric.metric_hash == group.hash)
-            )
-            prevMetrics = sess.scalar(statement)
+            # Check to see if we have already ran the same metrics on the same log.
+            with open(group.module.__file__, "rb") as f:
+                group.hash = hashlib.file_digest(f, "md5").digest()
+            with Session(engine) as sess:
+                statement = (
+                    Select(Metric.id)
+                    .where(Metric.file_hash == file_hash)
+                    .where(Metric.metric_hash == group.hash)
+                )
+                prevMetrics = sess.scalar(statement)
 
-        if prevMetrics is None:
-            # Run the metrics and store them
-            metrics = group.module.defineMetrics()
-            for metric in metrics.keys():
-                severity, result = metrics[metric](df)
-                group.metrics[metric] = (severity, result)
-            results[group.name] = group
-        else:
-            print(
-                f'Metrics in group "{group.name}" already ran on this file. Skipping.'
-            )
+            if prevMetrics is None:
+                # Run the metrics and store them
+                metrics = group.module.defineMetrics()
+                for metric in metrics.keys():
+                    severity, result = metrics[metric](df)
+                    group.metrics[metric] = (severity, result)
+                results[group.name] = group
+            else:
+                print(
+                    f'Metrics in group "{group.name}" already ran on this file. Skipping.'
+                )
+    except:
+        print(f"Metrics failed to run on file {path}. Skipping.")
+        return
 
     # Convert metrics to JSON
-    jDict: Dict[str, Dict] = {"hash": file_hash.hex()}
-    for key in results.keys():
-        jDict[key] = {"hash": results[key].hash.hex(), "metrics": results[key].metrics}
+    try:
+        jFilePath = ""
+        jDict: Dict[str, Dict] = {"hash": file_hash.hex()}
+        for key in results.keys():
+            jDict[key] = {"hash": results[key].hash.hex(), "metrics": results[key].metrics}
 
-    jString = json.dumps(jDict)
-    if jString != "":
-        jFilePath = os.path.join(
-            metricsPath,
-            f"{os.path.basename(path).replace('.', '_')}"
-            + "_"
-            + f"{str(datetime.datetime.today()).replace(' ', '_').replace('.', '-').replace(':', '-')}"
-            + ".json",
-        )
-        print(f'Writing metric JSON to "{jFilePath}".')
-        with open(jFilePath, "w") as f:
-            f.write(jString)
+        jString = json.dumps(jDict)
+        if jString != "":
+            jFilePath = os.path.join(
+                metricsPath,
+                f"{os.path.basename(path).replace('.', '_')}"
+                + "_"
+                + f"{str(datetime.datetime.today()).replace(' ', '_').replace('.', '-').replace(':', '-')}"
+                + ".json",
+            )
+            print(f'Writing metric JSON to "{jFilePath}".')
+            with open(jFilePath, "w") as f:
+                f.write(jString)
+    except:
+        print(f"Conversion of metric on {path} to JSON failed. Skipping.")
+        return
 
     # Create DB rows by looping over all metrics and store them in the table
-    rows = []
-    for group in results.keys():
-        for metric in results[group].metrics.keys():
-            severity, result = results[group].metrics[metric]
-            rows.append(
-                Metric(
-                    file_hash=file_hash,
-                    metric_hash=results[group].hash,
-                    file_name=os.path.basename(path),
-                    group=group,
-                    metric=metric,
-                    value=result,
-                    stoplight=severity,
+    try:
+        rows = []
+        for group in results.keys():
+            for metric in results[group].metrics.keys():
+                severity, result = results[group].metrics[metric]
+                rows.append(
+                    Metric(
+                        file_hash=file_hash,
+                        metric_hash=results[group].hash,
+                        file_name=os.path.basename(path),
+                        group=group,
+                        metric=metric,
+                        value=result,
+                        stoplight=severity,
+                    )
                 )
-            )
-    with Session(engine) as sess:
-        sess.add_all(rows)
-        sess.commit()
+        with Session(engine) as sess:
+            sess.add_all(rows)
+            sess.commit()
+    except:
+        print(f"Addition of metrics of {path} to database failed. Metrics can be found in {jFilePath} (if blank, no JSON created).")
 
     print(f'Analysis of "{path}" completed with {len(rows)} metrics computed.')
 
