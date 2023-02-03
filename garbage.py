@@ -39,8 +39,13 @@ def getInfoFromLogName(name: str) -> LogFileInfo:
     # If this log was never updated with time/match info, exit.
     if parts[1] == "TBD":
         return LogFileInfo(fileName=name)
-    # Calculate this log's datetime
-    dt = datetime.datetime.strptime(f"{parts[1]}_{parts[2]}", "%Y%m%d_%H%M%S")
+    # Calculate this log's datetime and then convert it to the local time.
+    dt = (
+        datetime.datetime.strptime(f"{parts[1]}_{parts[2]}", "%Y%m%d_%H%M%S")
+        .replace(tzinfo=datetime.timezone.utc)
+        .astimezone()
+    )
+    print(dt)
     # If our log is just a datetime, return that.
     if len(parts) == 3:
         return LogFileInfo(fileName=name, dt=dt)
@@ -95,6 +100,7 @@ def analyze_and_upload(path: str):
                 print(
                     f'Metrics in group "{group.name}" already ran on this file. Skipping.'
                 )
+                return
     except:
         print(f"Metrics failed to run on file {path}. Skipping.")
         return
@@ -142,7 +148,7 @@ def analyze_and_upload(path: str):
                         stoplight=severity,
                         log_timestamp=info.dt,
                         event_key=info.event,
-                        match_info=info.matchInfo
+                        match_info=info.matchInfo,
                     )
                 )
         with Session(engine) as sess:

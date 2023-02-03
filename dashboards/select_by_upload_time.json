@@ -274,9 +274,9 @@
     "list": [
       {
         "current": {
-          "selected": true,
-          "text": "Jan 28th 2023, 22:34:29",
-          "value": "1674966869"
+          "selected": false,
+          "text": "Feb 2nd 2023, 17:13:17",
+          "value": "1675379597"
         },
         "datasource": {
           "type": "mysql",
@@ -331,6 +331,6 @@
   "timezone": "",
   "title": "Select by Upload Time",
   "uid": "fegoMn04k",
-  "version": 11,
+  "version": 12,
   "weekStart": ""
 }

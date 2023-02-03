@@ -23,6 +23,6 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.drop_column("metrics", "match")
+    op.drop_column("metrics", "match_info")
     op.drop_column("metrics", "event_key")
     op.drop_column("metrics", "log_timestamp")

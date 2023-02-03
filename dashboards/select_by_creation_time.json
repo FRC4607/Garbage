@@ -1,0 +1,336 @@
+{
+    "annotations": {
+        "list": [
+            {
+                "builtIn": 1,
+                "datasource": {
+                    "type": "grafana",
+                    "uid": "-- Grafana --"
+                },
+                "enable": true,
+                "hide": true,
+                "iconColor": "rgba(0, 211, 255, 1)",
+                "name": "Annotations & Alerts",
+                "target": {
+                    "limit": 100,
+                    "matchAny": false,
+                    "tags": [],
+                    "type": "dashboard"
+                },
+                "type": "dashboard"
+            }
+        ]
+    },
+    "description": "Select the desired log by time it was put into the database.",
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 0,
+    "id": 4,
+    "links": [],
+    "liveNow": false,
+    "panels": [
+        {
+            "datasource": {
+                "type": "mysql",
+                "uid": "dvspn704k"
+            },
+            "gridPos": {
+                "h": 5,
+                "w": 24,
+                "x": 0,
+                "y": 0
+            },
+            "id": 4,
+            "targets": [
+                {
+                    "dataset": "garbage",
+                    "datasource": {
+                        "type": "mysql",
+                        "uid": "dvspn704k"
+                    },
+                    "editorMode": "code",
+                    "format": "table",
+                    "rawQuery": true,
+                    "rawSql": "SELECT `group`, MAX(stoplight) FROM garbage.metrics WHERE UNIX_TIMESTAMP(log_timestamp) = ${Timestamp} GROUP BY `group`, log_timestamp LIMIT 50",
+                    "refId": "A",
+                    "sql": {
+                        "columns": [
+                            {
+                                "parameters": [
+                                    {
+                                        "name": "group",
+                                        "type": "functionParameter"
+                                    }
+                                ],
+                                "type": "function"
+                            }
+                        ],
+                        "groupBy": [
+                            {
+                                "property": {
+                                    "type": "string"
+                                },
+                                "type": "groupBy"
+                            }
+                        ],
+                        "limit": 50
+                    },
+                    "table": "metrics"
+                }
+            ],
+            "title": "Metrics",
+            "trafficLightSettings": {
+                "digits": 1,
+                "fontColor": "#ccccdc",
+                "fontSize": "12px",
+                "greenThreshold": 0,
+                "invertScale": true,
+                "lightsPerLine": 5,
+                "linkTargetBlank": false,
+                "linkTooltip": "",
+                "linkUrl": "",
+                "max": 100,
+                "noValueNumber": -1,
+                "redThreshold": 2,
+                "renderLink": false,
+                "showTrend": true,
+                "showValue": false,
+                "sortLights": false,
+                "spreadControls": false,
+                "units": "",
+                "width": 20
+            },
+            "type": "snuids-trafficlights-panel"
+        },
+        {
+            "datasource": {
+                "type": "mysql",
+                "uid": "dvspn704k"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "fixedColor": "green",
+                        "mode": "thresholds"
+                    },
+                    "custom": {
+                        "align": "auto",
+                        "displayMode": "auto",
+                        "inspect": false
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "transparent",
+                                "value": null
+                            },
+                            {
+                                "color": "green",
+                                "value": 0
+                            },
+                            {
+                                "color": "#EAB839",
+                                "value": 1
+                            },
+                            {
+                                "color": "red",
+                                "value": 2
+                            }
+                        ]
+                    }
+                },
+                "overrides": [
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "Stoplight"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.displayMode",
+                                "value": "color-background-solid"
+                            }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                            "id": "byName",
+                            "options": "MAX(metric_timestamp)"
+                        },
+                        "properties": [
+                            {
+                                "id": "custom.hidden",
+                                "value": true
+                            }
+                        ]
+                    }
+                ]
+            },
+            "gridPos": {
+                "h": 18,
+                "w": 24,
+                "x": 0,
+                "y": 5
+            },
+            "id": 8,
+            "options": {
+                "footer": {
+                    "fields": "",
+                    "reducer": [
+                        "sum"
+                    ],
+                    "show": false
+                },
+                "showHeader": true,
+                "sortBy": [
+                    {
+                        "desc": true,
+                        "displayName": "Stoplight"
+                    }
+                ]
+            },
+            "pluginVersion": "9.3.6",
+            "targets": [
+                {
+                    "dataset": "garbage",
+                    "datasource": {
+                        "type": "mysql",
+                        "uid": "dvspn704k"
+                    },
+                    "editorMode": "code",
+                    "format": "table",
+                    "rawQuery": true,
+                    "rawSql": "SELECT metric as 'Metric', value as 'Value', stoplight as 'Stoplight' FROM garbage.metrics WHERE `group` = '${Group}' AND UNIX_TIMESTAMP(log_timestamp) = ${Timestamp} GROUP BY metric, value, stoplight LIMIT 50",
+                    "refId": "A",
+                    "sql": {
+                        "columns": [
+                            {
+                                "parameters": [
+                                    {
+                                        "name": "metric",
+                                        "type": "functionParameter"
+                                    }
+                                ],
+                                "type": "function"
+                            },
+                            {
+                                "parameters": [
+                                    {
+                                        "name": "stoplight",
+                                        "type": "functionParameter"
+                                    }
+                                ],
+                                "type": "function"
+                            }
+                        ],
+                        "groupBy": [
+                            {
+                                "property": {
+                                    "type": "string"
+                                },
+                                "type": "groupBy"
+                            }
+                        ],
+                        "limit": 50,
+                        "whereJsonTree": {
+                            "children1": [
+                                {
+                                    "id": "a8ba888b-89ab-4cde-b012-318604f2cd8f",
+                                    "properties": {
+                                        "field": "group",
+                                        "operator": "equal",
+                                        "value": [
+                                            "roborio"
+                                        ],
+                                        "valueSrc": [
+                                            "value"
+                                        ],
+                                        "valueType": [
+                                            "text"
+                                        ]
+                                    },
+                                    "type": "rule"
+                                }
+                            ],
+                            "id": "a98a98ab-89ab-4cde-b012-318604d2bb2e",
+                            "type": "group"
+                        },
+                        "whereString": "group = 'roborio'"
+                    },
+                    "table": "metrics"
+                }
+            ],
+            "title": "$Group Metrics",
+            "type": "table"
+        }
+    ],
+    "refresh": false,
+    "schemaVersion": 37,
+    "style": "dark",
+    "tags": [],
+    "templating": {
+        "list": [
+            {
+                "current": {
+                    "selected": true,
+                    "text": "Jan 30th 2023, 18:45:10",
+                    "value": "1675125910"
+                },
+                "datasource": {
+                    "type": "mysql",
+                    "uid": "dvspn704k"
+                },
+                "definition": "SELECT CONCAT('[', DATE_FORMAT(log_timestamp, '%b %D %Y, %T'), ']', '(', UNIX_TIMESTAMP(log_timestamp), ')') FROM garbage.metrics;",
+                "description": "The time at which you want the metrics to come from.",
+                "hide": 0,
+                "includeAll": false,
+                "multi": false,
+                "name": "Timestamp",
+                "options": [],
+                "query": "SELECT CONCAT('[', DATE_FORMAT(log_timestamp, '%b %D %Y, %T'), ']', '(', UNIX_TIMESTAMP(log_timestamp), ')') FROM garbage.metrics;",
+                "refresh": 1,
+                "regex": "/(?<text>(?<=\\[).*(?=\\]))|(?<value>(?<=\\().*(?=\\)))/g",
+                "skipUrlSync": false,
+                "sort": 4,
+                "type": "query"
+            },
+            {
+                "current": {
+                    "selected": false,
+                    "text": "roborio",
+                    "value": "roborio"
+                },
+                "datasource": {
+                    "type": "mysql",
+                    "uid": "dvspn704k"
+                },
+                "definition": "SELECT `group` FROM garbage.metrics WHERE UNIX_TIMESTAMP(log_timestamp) = ${Timestamp}",
+                "description": "The group to get detailed information from.",
+                "hide": 0,
+                "includeAll": false,
+                "label": "",
+                "multi": false,
+                "name": "Group",
+                "options": [],
+                "query": "SELECT `group` FROM garbage.metrics WHERE UNIX_TIMESTAMP(log_timestamp) = ${Timestamp}",
+                "refresh": 1,
+                "regex": "",
+                "skipUrlSync": false,
+                "sort": 2,
+                "type": "query"
+            }
+        ]
+    },
+    "time": {
+        "from": "now-6h",
+        "to": "now"
+    },
+    "timepicker": {},
+    "timezone": "",
+    "title": "Select by Log Time",
+    "uid": "gyBaCdkRD",
+    "version": 2,
+    "weekStart": ""
+}
