@@ -43,8 +43,9 @@ Sounds like a good deal? Awesome.
 ## Usage
 
 - Run `python garbage.py -d "[your database url from earlier"]` to start the program. For more configuration option run `python garbage.py --help`.
-- The repo comes with three example groups (collections of metrics). You can either use them or delete them. [Learn how to make your own groups](tbd).
-- Run `python logfile_uploader.py` to start a helper program that will automatically transfer your logs to be analyzed. Enter the IP of your team's RoboRIO (`10.TE.AM.2` usually) and it will start. Keep an ethernet cable plugged into your computer and have the pit crew turn on the robot and plug in the cable when the robot gets back so the program can transfer the logs.
+- Move `.wpilog` files into the `archive/logs` (by default) to analyze them.
+- The repo comes with three example groups (collections of metrics). You can either use them or delete them. [Learn how to make your own groups](docs/groups.md).
+- Run `python logfile_uploader.py` to start a helper program that will automatically transfer your logs to be analyzed. Enter the IP of your team's RoboRIO (`10.TE.AM.2` usually) and it will start. Keep an ethernet cable plugged into your computer and have the pit crew turn on the robot and plug in the cable when the robot gets back so the program can transfer the logs.  
 - >If you are storing your logs on a USB drive or are using a different username/password combo than `lvuser/[no password]`, you will have to change the script yourself.
-- JSON files with the results of the metrics are stored in the `archive/metrics` directory. The names are just the name of the log file the metrics came from along with a timestamp.
-- Use the selectors at the top of the Grafana dashboards to change which metrics you are viewing. You can see a complete list of your dashboards by going back to the Dashboards tab.
+- JSON files with the results of the metrics are stored by default in the `archive/metrics` directory. The names are just the name of the log file the metrics came from along with a timestamp.
+- Use the selectors at the top of the Grafana dashboards to change which groups and metrics you are viewing. You can see a complete list of your dashboards by going back to the Dashboards tab.
