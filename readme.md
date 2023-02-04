@@ -16,13 +16,13 @@ Sounds like a good deal? Awesome.
 
 ### Prerequisites
 
-1. Install a relational database of some kind. [MySQL](https://www.mysql.com/) was used in development, but any relational database supported by [SQAlchemy](https://docs.sqlalchemy.org/en/20/dialects/index.html) and [Grafana](https://grafana.com/docs/grafana/latest/datasources/https://grafana.com/docs/grafana/latest/datasources/) should be OK (so you can technically  use [Google](https://github.com/betodealmeida/shillelagh/) [Sheets](https://grafana.com/grafana/plugins/grafana-googlesheets-datasource/) if you wanted).
+1. Install a relational database of some kind. [MySQL](https://www.mysql.com/) was used in development, but any relational database supported by [SQLAlchemy](https://docs.sqlalchemy.org/en/20/dialects/index.html) and [Grafana](https://grafana.com/docs/grafana/latest/datasources/https://grafana.com/docs/grafana/latest/datasources/) should be OK (so you can technically  use [Google](https://github.com/betodealmeida/shillelagh/) [Sheets](https://grafana.com/grafana/plugins/grafana-googlesheets-datasource/) if you wanted).
 2. Install [Grafana](https://grafana.com/grafana/download). Whether you pick the Enterprise or OSS version shouldn't matter.
 
 ### Python Setup
 
 1. Clone this repository onto a computer, preferably one that can stay in your pit for the entire event.
-2. Create a new python venv in the folder  
+2. Create a new python venv in the folder:  
 `python -m venv .`
 3. Activate the virtual environment.
 4. Install all of the necessary packages from the requirements.txt file:  
@@ -32,13 +32,14 @@ Sounds like a good deal? Awesome.
 
 ### Grafana Setup
 
-1. Log into Grafana.
-2. Hover over the gear in the bottom left hand corner of the UI and select `Data sources`.
-3. Click on `Add data source` and follow the prompts to add your database.
-4. Click on the dashboards button (the one with the four squares) on the left hand side of the UI.
-5. Click `New > Import`.
-6. Click on `Upload JSON file` and select one of the dashboards in the dashboards folder from the cloned repo.
-7. Use the same process to add the other dashboards.
+1. Install [this traffic light plugin](https://grafana.com/grafana/plugins/snuids-trafficlights-panel/?tab=installation).
+2. Log into Grafana.
+3. Hover over the gear in the bottom left hand corner of the UI and select `Data sources`.
+4. Click on `Add data source` and follow the prompts to add your database.
+5. Click on the dashboards button (the one with the four squares) on the left hand side of the UI.
+6. Click `New > Import`.
+7. Click on `Upload JSON file` and select one of the dashboards in the dashboards folder from the cloned repo.
+8. Use the same process to add the other dashboards.
 
 ## Usage
 
