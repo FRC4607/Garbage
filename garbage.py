@@ -100,7 +100,7 @@ def analyze_and_upload(path: str):
                 print(
                     f'Metrics in group "{group.name}" already ran on this file. Skipping.'
                 )
-                return
+                continue
     except:
         print(f"Metrics failed to run on file {path}. Skipping.")
         return
