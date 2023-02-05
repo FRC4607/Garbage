@@ -8,7 +8,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument(
     "-d",
     "--database",
-    help="A SQAlchemy connection string that specifies the database to connect to.",
+    help="A SQLAlchemy connection string that specifies the database to connect to.",
     required=True,
 )
 

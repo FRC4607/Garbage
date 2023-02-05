@@ -2,7 +2,7 @@ from sqlalchemy import create_engine
 from config.parse_args import args
 import sys
 
-# Creates the SQAlchemy engine from a DBURL.
+# Creates the SQLAlchemy engine from a DBURL.
 try:
     engine = create_engine(args.database)
 except:
