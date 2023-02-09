@@ -96,7 +96,7 @@
         "showTrend": true,
         "showValue": false,
         "sortLights": false,
-        "spreadControls": false,
+        "spreadControls": true,
         "units": "",
         "width": 20
       },
@@ -275,8 +275,8 @@
       {
         "current": {
           "selected": false,
-          "text": "Feb 2nd 2023, 17:13:17",
-          "value": "1675379597"
+          "text": "Feb 2nd 2023, 17:12:57",
+          "value": "1675379577"
         },
         "datasource": {
           "type": "mysql",
@@ -293,7 +293,7 @@
         "refresh": 1,
         "regex": "/(?<text>(?<=\\[).*(?=\\]))|(?<value>(?<=\\().*(?=\\)))/g",
         "skipUrlSync": false,
-        "sort": 4,
+        "sort": 0,
         "type": "query"
       },
       {
@@ -318,7 +318,7 @@
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
-        "sort": 2,
+        "sort": 1,
         "type": "query"
       }
     ]
@@ -331,6 +331,6 @@
   "timezone": "",
   "title": "Select by Upload Time",
   "uid": "fegoMn04k",
-  "version": 12,
+  "version": 13,
   "weekStart": ""
 }
