@@ -36,6 +36,17 @@ def ProcessImuYawAngleDriftPigeon(robotTelemetry: pd.DataFrame) -> Tuple[int, st
 
 
 def _getImuYawAngle(gyroKey: str, robotTelemetry: pd.DataFrame) -> pd.DataFrame:
+    """Returns a pandas DataFrame with a column with the designated IMU's yaw angle.
+    Args:
+        gyroKey: Which gyro to get data frome.
+        robotTelemetry: Pandas dataframe of robot telemetry
+
+    Returns:
+        A pandas dataframe with a column called "IMU Yaw Angle (deg)" that contains the values of the selected gyroscope.
+
+    Raises:
+        None
+    """
     fmsMode = robotTelemetry[robotTelemetry["Key"] == "DS:enabled"]
     if fmsMode.empty:
         return pd.DataFrame()
@@ -45,7 +56,7 @@ def _getImuYawAngle(gyroKey: str, robotTelemetry: pd.DataFrame) -> pd.DataFrame:
         return pd.DataFrame()
     imuYawAngle = imuYawAngle[(imuYawAngle.index <= stopTime)]
     imuYawAngle["IMU Yaw Angle (deg)"] = pd.to_numeric(imuYawAngle["Value"])
-    return pd.DataFrame()
+    return imuYawAngle
 
 
 def ProcessImuYawAngleNorm(
@@ -125,6 +136,15 @@ def ProcessImuYawAngleDrift(
 
 
 def ProcessADISTemp(robotTelemetry: pd.DataFrame) -> Tuple[int, str]:
+    """Processes the temperature of the Analog Devices gyroscope on the robot (if it exists) and sees if this temperature reaches concerning levels.
+    Args:
+        robotTelemetry: Pandas dataframe of robot telemetry
+
+    Returns:
+        A tuple containing the stoplight severity and a string containing the result of this metric.
+    Raises:
+        None
+    """
     staleDsData = robotTelemetry[robotTelemetry["Key"] == "swerve/gyro/temp"]
     if staleDsData.empty:
         return -1, "metric_not_implemented"

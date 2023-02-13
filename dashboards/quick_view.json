@@ -154,7 +154,7 @@
               },
               {
                 "id": "custom.width",
-                "value": 39
+                "value": 33
               }
             ]
           },
@@ -178,7 +178,7 @@
             "properties": [
               {
                 "id": "custom.width",
-                "value": 172
+                "value": 178
               }
             ]
           },
@@ -212,7 +212,12 @@
           "show": false
         },
         "showHeader": true,
-        "sortBy": []
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Stoplight"
+          }
+        ]
       },
       "pluginVersion": "9.3.6",
       "targets": [
@@ -225,7 +230,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT metric as 'Metric', stoplight as 'Stoplight', value as 'Value' FROM garbage.metrics WHERE `group` = 'swerve' AND UNIX_TIMESTAMP(log_timestamp) = ${Timestamp} AND stoplight > 1 GROUP BY metric, value, stoplight LIMIT 50",
+          "rawSql": "SELECT metric as 'Metric', stoplight as 'Stoplight', value as 'Value' FROM garbage.metrics WHERE `group` = 'swerve' AND UNIX_TIMESTAMP(log_timestamp) = ${Timestamp} AND stoplight >= 1 GROUP BY metric, value, stoplight LIMIT 50",
           "refId": "A",
           "sql": {
             "columns": [
@@ -340,7 +345,7 @@
               },
               {
                 "id": "custom.width",
-                "value": 39
+                "value": 29
               }
             ]
           },
@@ -364,7 +369,7 @@
             "properties": [
               {
                 "id": "custom.width",
-                "value": 172
+                "value": 181
               }
             ]
           },
@@ -398,7 +403,12 @@
           "show": false
         },
         "showHeader": true,
-        "sortBy": []
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Stoplight"
+          }
+        ]
       },
       "pluginVersion": "9.3.6",
       "targets": [
@@ -411,7 +421,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT metric as 'Metric', stoplight as 'Stoplight', value as 'Value' FROM garbage.metrics WHERE `group` = 'roborio' AND UNIX_TIMESTAMP(log_timestamp) = ${Timestamp} AND stoplight > 1 GROUP BY metric, value, stoplight LIMIT 50",
+          "rawSql": "SELECT metric as 'Metric', stoplight as 'Stoplight', value as 'Value' FROM garbage.metrics WHERE `group` = 'roborio' AND UNIX_TIMESTAMP(log_timestamp) = ${Timestamp} AND stoplight >= 1 GROUP BY metric, value, stoplight LIMIT 50",
           "refId": "A",
           "sql": {
             "columns": [
@@ -526,7 +536,7 @@
               },
               {
                 "id": "custom.width",
-                "value": 39
+                "value": 34
               }
             ]
           },
@@ -550,7 +560,7 @@
             "properties": [
               {
                 "id": "custom.width",
-                "value": 172
+                "value": 177
               }
             ]
           },
@@ -584,7 +594,12 @@
           "show": false
         },
         "showHeader": true,
-        "sortBy": []
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Stoplight"
+          }
+        ]
       },
       "pluginVersion": "9.3.6",
       "targets": [
@@ -597,7 +612,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT metric as 'Metric', stoplight as 'Stoplight', value as 'Value' FROM garbage.metrics WHERE `group` = 'pcm' AND UNIX_TIMESTAMP(log_timestamp) = ${Timestamp} AND stoplight > 1 GROUP BY metric, value, stoplight LIMIT 50",
+          "rawSql": "SELECT metric as 'Metric', stoplight as 'Stoplight', value as 'Value' FROM garbage.metrics WHERE `group` = 'pcm' AND UNIX_TIMESTAMP(log_timestamp) = ${Timestamp} AND stoplight >= 1 GROUP BY metric, value, stoplight LIMIT 50",
           "refId": "A",
           "sql": {
             "columns": [
@@ -712,7 +727,7 @@
               },
               {
                 "id": "custom.width",
-                "value": 39
+                "value": 20
               }
             ]
           },
@@ -736,7 +751,7 @@
             "properties": [
               {
                 "id": "custom.width",
-                "value": 172
+                "value": 177
               }
             ]
           },
@@ -770,7 +785,12 @@
           "show": false
         },
         "showHeader": true,
-        "sortBy": []
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "Stoplight"
+          }
+        ]
       },
       "pluginVersion": "9.3.6",
       "targets": [
@@ -783,7 +803,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT metric as 'Metric', stoplight as 'Stoplight', value as 'Value' FROM garbage.metrics WHERE `group` = 'pdp' AND UNIX_TIMESTAMP(log_timestamp) = ${Timestamp} AND stoplight > 1 GROUP BY metric, value, stoplight LIMIT 50",
+          "rawSql": "SELECT metric as 'Metric', stoplight as 'Stoplight', value as 'Value' FROM garbage.metrics WHERE `group` = 'pdp' AND UNIX_TIMESTAMP(log_timestamp) = ${Timestamp} AND stoplight >= 1 GROUP BY metric, value, stoplight LIMIT 50",
           "refId": "A",
           "sql": {
             "columns": [
@@ -855,7 +875,7 @@
     "list": [
       {
         "current": {
-          "selected": true,
+          "selected": false,
           "text": "Jan 30th 2023, 18:59:46",
           "value": "1675126786"
         },
@@ -887,6 +907,6 @@
   "timezone": "",
   "title": "Quick Look - Log Time",
   "uid": "caTIP904z",
-  "version": 3,
+  "version": 4,
   "weekStart": ""
 }

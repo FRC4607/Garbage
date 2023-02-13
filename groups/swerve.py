@@ -1,7 +1,6 @@
 from typing import Set, Callable, Tuple, Dict
 import pandas as pd
 import numpy as np
-import scipy
 import math
 
 pd.options.mode.chained_assignment = None
@@ -9,9 +8,46 @@ pd.options.mode.chained_assignment = None
 boolConv = lambda x: x.replace({"true": 1, "false": 0})
 
 
+def reduceRadianError(rad: float) -> float:
+    """Takes a values in radians in and returns how close the value is to 0 radians taking loop around into account."""
+    error = rad % (2 * math.pi)
+    theError = min(abs(error), abs(error - (2 * math.pi)))
+    if theError == abs(error):
+        return error
+    else:
+        return error - (2 * math.pi)
+
+
+# Key: ((yellow max, red max), (yellow average, red average))
+channelMapping: Dict[str, Tuple[Tuple[float, float], Tuple[float, float]]] = {
+    "Front Left/turn": ("Front Left Turn Motor", (40, 60), (5, 20)),
+    "Front Right/turn": ("Front Right Turn Motor", (40, 60), (5, 20)),
+    "Rear Left/turn": ("Rear Left Turn Motor", (40, 60), (5, 20)),
+    "Rear Right/turn": ("Rear Right Turn Motor", (40, 60), (5, 20)),
+    "Front Left/drive": ("Front Left Drive Motor", (40, 60), (20, 40)),
+    "Front Right/drive": ("Front Right Drive Motor", (40, 60), (20, 40)),
+    "Rear Left/drive": ("Rear Left Drive Motor", (40, 60), (20, 40)),
+    "Rear Right/drive": ("Rear Right Drive Motor", (40, 60), (20, 40)),
+}
+
+
+def GenerateMotorCurrentMetrics() -> Dict[
+    str, Callable[[pd.DataFrame], Tuple[int, str]]
+]:
+    result = {}
+    for key in channelMapping.keys():
+        result[
+            f"{channelMapping[key][0]} Max Current"
+        ] = lambda df, key=key: ProcessMaxCurrent(key, df)
+        result[
+            f"{channelMapping[key][0]} Average Current"
+        ] = lambda df, key=key: ProcessAverageCurrent(key, df)
+    return result
+
+
 def defineMetrics() -> Dict[str, Callable[[pd.DataFrame], Tuple[int, str]]]:
     """Returns a list of the metrics contained in this group and their corresponding functions."""
-    return {
+    normalDict = {
         "FL Turning Encoder Alignment": ProcessFrontLeftTurningEncoderAlignment,
         "FL Drive Motor Max Temp": ProcessFrontLeftDriveMaxTemp,
         "FL Turn Motor Max Temp": ProcessFrontLeftTurnMaxTemp,
@@ -21,18 +57,19 @@ def defineMetrics() -> Dict[str, Callable[[pd.DataFrame], Tuple[int, str]]]:
         "FR Drive Motor Max Temp": ProcessFrontRightDriveMaxTemp,
         "FR Turn Motor Max Temp": ProcessFrontRightTurnMaxTemp,
         "FR Turn Motor Mean Error": ProcessFrontRightTurnMeanError,
-        "FR Drive Motor Mean Error": ProcessBackLeftDriveMeanError,
-        "BL Turning Encoder Alignment": ProcessBackLeftTurningEncoderAlignment,
-        "BL Drive Motor Max Temp": ProcessBackLeftDriveMaxTemp,
-        "BL Turn Motor Max Temp": ProcessBackLeftTurnMaxTemp,
-        "BL Turn Motor Mean Error": ProcessBackLeftTurnMeanError,
-        "BL Drive Motor Mean Error": ProcessBackLeftDriveMeanError,
-        "BR Turning Encoder Alignment": ProcessBackRightTurningEncoderAlignment,
-        "BR Drive Motor Max Temp": ProcessBackRightDriveMaxTemp,
-        "BR Turn Motor Max Temp": ProcessBackRightTurnMaxTemp,
-        "BR Turn Motor Mean Error": ProcessBackRightTurnMeanError,
-        "BR Drive Motor Mean Error": ProcessBackRightDriveMeanError,
+        "FR Drive Motor Mean Error": ProcessFrontRightDriveMeanError,
+        "RL Turning Encoder Alignment": ProcessRearLeftTurningEncoderAlignment,
+        "RL Drive Motor Max Temp": ProcessRearLeftDriveMaxTemp,
+        "RL Turn Motor Max Temp": ProcessRearLeftTurnMaxTemp,
+        "RL Turn Motor Mean Error": ProcessRearLeftTurnMeanError,
+        "RL Drive Motor Mean Error": ProcessRearLeftDriveMeanError,
+        "RR Turning Encoder Alignment": ProcessRearRightTurningEncoderAlignment,
+        "RR Drive Motor Max Temp": ProcessRearRightDriveMaxTemp,
+        "RR Turn Motor Max Temp": ProcessRearRightTurnMaxTemp,
+        "RR Turn Motor Mean Error": ProcessRearRightTurnMeanError,
+        "RR Drive Motor Mean Error": ProcessRearRightDriveMeanError,
     }
+    return normalDict | GenerateMotorCurrentMetrics()
 
 
 def ProcessFrontLeftTurningEncoderAlignment(
@@ -50,11 +87,11 @@ def ProcessFrontLeftTurnMaxTemp(robotTelemetry: pd.DataFrame) -> Tuple[int, str]
 
 
 def ProcessFrontLeftDriveMeanError(robotTelemetry: pd.DataFrame) -> Tuple[int, str]:
-    return ProcessDriveMotorMeanError("Front Left/drive", robotTelemetry)
+    return ProcessDriveMotorMeanError("Front Left", robotTelemetry)
 
 
 def ProcessFrontLeftTurnMeanError(robotTelemetry: pd.DataFrame) -> Tuple[int, str]:
-    return ProcessTurnMotorMeanError("Front Left/turn", robotTelemetry)
+    return ProcessTurnMotorMeanError("Front Left", robotTelemetry)
 
 
 def ProcessFrontRightTurningEncoderAlignment(
@@ -72,60 +109,70 @@ def ProcessFrontRightTurnMaxTemp(robotTelemetry: pd.DataFrame) -> Tuple[int, str
 
 
 def ProcessFrontRightDriveMeanError(robotTelemetry: pd.DataFrame) -> Tuple[int, str]:
-    return ProcessDriveMotorMeanError("Front Right/drive", robotTelemetry)
+    return ProcessDriveMotorMeanError("Front Right", robotTelemetry)
 
 
 def ProcessFrontRightTurnMeanError(robotTelemetry: pd.DataFrame) -> Tuple[int, str]:
-    return ProcessTurnMotorMeanError("Front Right/turn", robotTelemetry)
+    return ProcessTurnMotorMeanError("Front Right", robotTelemetry)
 
 
-def ProcessBackLeftTurningEncoderAlignment(
+def ProcessRearLeftTurningEncoderAlignment(
     robotTelemetry: pd.DataFrame,
 ) -> Tuple[int, str]:
-    return ProcessTurningEncoderAlignment("Back Left", robotTelemetry)
+    return ProcessTurningEncoderAlignment("Rear Left", robotTelemetry)
 
 
-def ProcessBackLeftDriveMaxTemp(robotTelemetry: pd.DataFrame) -> Tuple[int, str]:
-    return ProcessMaxMotorTemp("Back Left/drive", robotTelemetry)
+def ProcessRearLeftDriveMaxTemp(robotTelemetry: pd.DataFrame) -> Tuple[int, str]:
+    return ProcessMaxMotorTemp("Rear Left/drive", robotTelemetry)
 
 
-def ProcessBackLeftTurnMaxTemp(robotTelemetry: pd.DataFrame) -> Tuple[int, str]:
-    return ProcessMaxMotorTemp("Back Left/turn", robotTelemetry)
+def ProcessRearLeftTurnMaxTemp(robotTelemetry: pd.DataFrame) -> Tuple[int, str]:
+    return ProcessMaxMotorTemp("Rear Left/turn", robotTelemetry)
 
 
-def ProcessBackLeftDriveMeanError(robotTelemetry: pd.DataFrame) -> Tuple[int, str]:
-    return ProcessDriveMotorMeanError("Back Left/drive", robotTelemetry)
+def ProcessRearLeftDriveMeanError(robotTelemetry: pd.DataFrame) -> Tuple[int, str]:
+    return ProcessDriveMotorMeanError("Rear Left", robotTelemetry)
 
 
-def ProcessBackLeftTurnMeanError(robotTelemetry: pd.DataFrame) -> Tuple[int, str]:
-    return ProcessTurnMotorMeanError("Back Left/turn", robotTelemetry)
+def ProcessRearLeftTurnMeanError(robotTelemetry: pd.DataFrame) -> Tuple[int, str]:
+    return ProcessTurnMotorMeanError("Rear Left", robotTelemetry)
 
 
-def ProcessBackRightTurningEncoderAlignment(
+def ProcessRearRightTurningEncoderAlignment(
     robotTelemetry: pd.DataFrame,
 ) -> Tuple[int, str]:
-    return ProcessTurningEncoderAlignment("Back Right", robotTelemetry)
+    return ProcessTurningEncoderAlignment("Rear Right", robotTelemetry)
 
 
-def ProcessBackRightDriveMaxTemp(robotTelemetry: pd.DataFrame) -> Tuple[int, str]:
-    return ProcessMaxMotorTemp("Back Right/drive", robotTelemetry)
+def ProcessRearRightDriveMaxTemp(robotTelemetry: pd.DataFrame) -> Tuple[int, str]:
+    return ProcessMaxMotorTemp("Rear Right/drive", robotTelemetry)
 
 
-def ProcessBackRightTurnMaxTemp(robotTelemetry: pd.DataFrame) -> Tuple[int, str]:
-    return ProcessMaxMotorTemp("Back Right/turn", robotTelemetry)
+def ProcessRearRightTurnMaxTemp(robotTelemetry: pd.DataFrame) -> Tuple[int, str]:
+    return ProcessMaxMotorTemp("Rear Right/turn", robotTelemetry)
 
 
-def ProcessBackRightDriveMeanError(robotTelemetry: pd.DataFrame) -> Tuple[int, str]:
-    return ProcessTurnMotorMeanError("Back Right/drive", robotTelemetry)
+def ProcessRearRightDriveMeanError(robotTelemetry: pd.DataFrame) -> Tuple[int, str]:
+    return ProcessDriveMotorMeanError("Rear Right", robotTelemetry)
 
 
-def ProcessBackRightTurnMeanError(robotTelemetry: pd.DataFrame) -> Tuple[int, str]:
-    return ProcessTurnMotorMeanError("Back Right/turn", robotTelemetry)
+def ProcessRearRightTurnMeanError(robotTelemetry: pd.DataFrame) -> Tuple[int, str]:
+    return ProcessTurnMotorMeanError("Rear Right", robotTelemetry)
 
 
 def ProcessTurningEncoderAlignment(
     moduleKey: str, robotTelemetry: pd.DataFrame
 ) -> Tuple[int, str]:
+    """Checks the alignment of the integrated NEO encoder with the external encoder's position.
+    Args:
+        moduleKey: The key of the module to check alignment for
+        robotTelemetry: Pandas dataframe of robot telemetry
+
+    Returns:
+        A tuple containing the stoplight severity and a string containing the result of this metric.
+    Raises:
+        None
+    """
     # Grab data
     neoEncoder = robotTelemetry[
         robotTelemetry["Key"] == f"/swerve/{moduleKey}/turn/position"
@@ -176,8 +223,8 @@ def ProcessTurningEncoderAlignment(
     # Get rid of values three standard deviations away from the mean
     threeStd = test["Error"].std() * 3
     errorsFilt = test[abs(test["Error"] - test["Error"].mean()) <= threeStd]["Error"]
-    # Get the maximum error
-    maxError = errorsFilt.max()
+    # Get the maximum error and reduce error
+    maxError = reduceRadianError(errorsFilt.max())
     # Calculate stoplight
     stoplight = 0
     if maxError > math.radians(5):
@@ -188,6 +235,16 @@ def ProcessTurningEncoderAlignment(
 
 
 def ProcessMaxMotorTemp(motorKey: str, robotTelemetry: pd.DataFrame) -> Tuple[int, str]:
+    """Checks the temperature of a motor in the swerve drive
+    Args:
+        moduleKey: The key of the motor to check alignment for
+        robotTelemetry: Pandas dataframe of robot telemetry
+
+    Returns:
+        A tuple containing the stoplight severity and a string containing the result of this metric.
+    Raises:
+        None
+    """
     # Grab data
     values = robotTelemetry[robotTelemetry["Key"] == f"/swerve/{motorKey}/temp"]
     if values.empty:
@@ -208,11 +265,22 @@ def ProcessMaxMotorTemp(motorKey: str, robotTelemetry: pd.DataFrame) -> Tuple[in
 def ProcessMeanMotorError(
     procesKey: str, setpointKey: str, robotTelemetry: pd.DataFrame
 ) -> float:
+    """Checks the mean error of a motor in the swerve drive. Returns the mean value for motor-specific processing.
+    Args:
+        processKey: The key of the process variable to test
+        setpointKey: The key of the setpoint the process variable is trying to track
+        robotTelemetry: Pandas dataframe of robot telemetry
+
+    Returns:
+        A tuple containing the stoplight severity and a string containing the result of this metric.
+    Raises:
+        None
+    """
     # Grab data
-    process = robotTelemetry[robotTelemetry["Key"] == f"/swerve/{procesKey}"]
+    process = robotTelemetry[robotTelemetry["Key"] == procesKey]
     if process.empty:
         return np.nan
-    setpoint = robotTelemetry[robotTelemetry["Key"] == f"/swerve/{setpointKey}"]
+    setpoint = robotTelemetry[robotTelemetry["Key"] == setpointKey]
     if setpoint.empty:
         return np.nan
     fmsMode = robotTelemetry[robotTelemetry["Key"] == "DS:enabled"]
@@ -271,6 +339,16 @@ def ProcessMeanMotorError(
 def ProcessDriveMotorMeanError(
     moduleKey: str, robotTelemetry: pd.DataFrame
 ) -> Tuple[int, str]:
+    """Checks the error of the drive motor in a swerve drive module
+    Args:
+        moduleKey: The key of the module to check error for
+        robotTelemetry: Pandas dataframe of robot telemetry
+
+    Returns:
+        A tuple containing the stoplight severity and a string containing the result of this metric.
+    Raises:
+        None
+    """
     mean = abs(
         ProcessMeanMotorError(
             f"/swerve/{moduleKey}/drive/velocity",
@@ -289,18 +367,87 @@ def ProcessDriveMotorMeanError(
 def ProcessTurnMotorMeanError(
     moduleKey: str, robotTelemetry: pd.DataFrame
 ) -> Tuple[int, str]:
+    """Checks the error of the turn motor in a swerve drive module
+    Args:
+        moduleKey: The key of the module to check error for
+        robotTelemetry: Pandas dataframe of robot telemetry
+
+    Returns:
+        A tuple containing the stoplight severity and a string containing the result of this metric.
+    Raises:
+        None
+    """
     mean = abs(
         ProcessMeanMotorError(
             f"/swerve/{moduleKey}/turn/position",
-            f"/swerve/{moduleKey}/drive/setpoint",
+            f"/swerve/{moduleKey}/turn/setpoint",
             robotTelemetry,
         )
     )
+    mean = reduceRadianError(mean)
     if np.isnan(mean):
         return -1, "metric_not_implemented"
     stoplight = 0
-    if mean > math.radians(3):
+    if mean > math.radians(5):
         stoplight = 2
-    if mean > math.radians(2) and stoplight == 0:
+    if mean > math.radians(3) and stoplight == 0:
         stoplight = 1
     return stoplight, f"{str(mean)} rad"
+
+
+def ProcessMaxCurrent(motorKey: str, robotTelemetry: pd.DataFrame) -> Tuple[int, str]:
+    """Process the maximum current draw of a swerve drive motor and uses it to determine a severity.
+
+    Args:
+        motorKey: The motor key to check
+        robotTelemetry: Pandas dataframe of robot telemetry
+
+    Returns:
+        A tuple containing the stoplight severity and a string containing the result of this metric.
+
+    Raises:
+        None
+
+    """
+    currents = robotTelemetry[robotTelemetry["Key"] == f"/swerve/{motorKey}/current"]
+    if currents.empty:
+        return -1, "metric_not_implemented"
+    currents["Value"] = pd.to_numeric(currents["Value"])
+    # Find the mean
+    maxCurrent = currents["Value"].max()
+    stoplight = 0
+    if maxCurrent > channelMapping[motorKey][1][1]:
+        stoplight = 2
+    elif maxCurrent > channelMapping[motorKey][1][0] and stoplight != 2:
+        stoplight = 1
+    return stoplight, f"{maxCurrent} A"
+
+
+def ProcessAverageCurrent(
+    motorKey: str, robotTelemetry: pd.DataFrame
+) -> Tuple[int, str]:
+    """Process the average current draw of a swerve drive motor and uses it to determine a severity.
+
+    Args:
+        motorKey: The motor key to check
+        robotTelemetry: Pandas dataframe of robot telemetry
+
+    Returns:
+        A tuple containing the stoplight severity and a string containing the result of this metric.
+
+    Raises:
+        None
+
+    """
+    currents = robotTelemetry[robotTelemetry["Key"] == f"/swerve/{motorKey}/current"]
+    if currents.empty:
+        return -1, "metric_not_implemented"
+    currents["Value"] = pd.to_numeric(currents["Value"])
+    # Find the mean
+    maxCurrent = currents["Value"].mean()
+    stoplight = 0
+    if maxCurrent > channelMapping[motorKey][2][1]:
+        stoplight = 2
+    elif maxCurrent > channelMapping[motorKey][2][0] and stoplight != 2:
+        stoplight = 1
+    return stoplight, f"{maxCurrent} A"
