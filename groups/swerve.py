@@ -227,9 +227,9 @@ def ProcessTurningEncoderAlignment(
     maxError = reduceRadianError(errorsFilt.max())
     # Calculate stoplight
     stoplight = 0
-    if maxError > math.radians(5):
+    if maxError > math.radians(12):
         stoplight = 2
-    elif maxError > math.radians(3) and stoplight == 0:
+    elif maxError > math.radians(8) and stoplight == 0:
         stoplight = 1
     return stoplight, f"{str(maxError)} rad"
 
@@ -388,9 +388,9 @@ def ProcessTurnMotorMeanError(
     if np.isnan(mean):
         return -1, "metric_not_implemented"
     stoplight = 0
-    if mean > math.radians(5):
+    if mean > math.radians(12):
         stoplight = 2
-    if mean > math.radians(3) and stoplight == 0:
+    if mean > math.radians(8) and stoplight == 0:
         stoplight = 1
     return stoplight, f"{str(mean)} rad"
 

@@ -1,8 +1,3 @@
-from wpilog.datalog import DataLogReader
-from wpilog.dlutil import WPILogToDataFrame
-from typing import Dict, List, Tuple
-import mmap
-
 import pandas as pd
 import numpy as np
 from typing import Callable, Dict, Tuple
@@ -20,7 +15,7 @@ def defineMetrics() -> Dict[str, Callable[[pd.DataFrame], Tuple[int, str]]]:
     }
 
 def ProcessAverageArmError(robotTelemetry: pd.DataFrame) -> Tuple[int, str]:
-    """Checks the mean error of a motor in the swerve drive. Returns the mean value for motor-specific processing.
+    """Checks the mean error of the arm's motor.
     Args:
         processKey: The key of the process variable to test
         setpointKey: The key of the setpoint the process variable is trying to track
@@ -92,14 +87,14 @@ def ProcessAverageArmError(robotTelemetry: pd.DataFrame) -> Tuple[int, str]:
     # Get the mean
     mean = df["Error"].mean()
     if mean >= 12:
-        return 2, f"{mean} deg"
+        return 2, f"{mean} deg/s"
     elif mean >= 6:
-        return 1, f"{mean} deg"
+        return 1, f"{mean} deg/s"
     if mean < 6:
-        return 0, f"{mean} deg"
+        return 0, f"{mean} deg/s"
 
 def ProcessMaxCurrent(robotTelemetry: pd.DataFrame) -> Tuple[int, str]:
-    """Process the maximum current draw of a swerve drive motor and uses it to determine a severity.
+    """Process the maximum current draw of the arm's motor and uses it to determine a severity.
 
     Args:
         motorKey: The motor key to check
@@ -129,7 +124,7 @@ def ProcessMaxCurrent(robotTelemetry: pd.DataFrame) -> Tuple[int, str]:
 def ProcessAverageCurrent(
         robotTelemetry: pd.DataFrame
 ) -> Tuple[int, str]:
-    """Process the average current draw of a swerve drive motor and uses it to determine a severity.
+    """Process the average current draw of the arm's motor and uses it to determine a severity.
 
     Args:
         motorKey: The motor key to check
@@ -166,7 +161,7 @@ def ProcessAverageCurrent(
     return stoplight, f"{avgCurrent} A"
 
 def ProcessMaxMotorTemp(robotTelemetry: pd.DataFrame) -> Tuple[int, str]:
-    """Checks the temperature of a motor in the swerve drive
+    """Checks the temperature of the arm's motor
     Args:
         moduleKey: The key of the motor to check alignment for
         robotTelemetry: Pandas dataframe of robot telemetry
@@ -193,7 +188,7 @@ def ProcessMaxMotorTemp(robotTelemetry: pd.DataFrame) -> Tuple[int, str]:
     return stoplight, f"{maxTemp} °C"
 
 def ProcessAvgMotorTemp(robotTelemetry: pd.DataFrame) -> Tuple[int, str]:
-    """Checks the temperature of a motor in the swerve drive
+    """Checks the temperature of the arm's motor
     Args:
         moduleKey: The key of the motor to check alignment for
         robotTelemetry: Pandas dataframe of robot telemetry
@@ -218,14 +213,3 @@ def ProcessAvgMotorTemp(robotTelemetry: pd.DataFrame) -> Tuple[int, str]:
     elif avgTemp > 35 and stoplight == 0:
         stoplight = 1
     return stoplight, f"{avgTemp} °C"
-
-with open("FRC_20230304_215647.wpilog", "r") as f:
-    mm = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
-    reader = DataLogReader(mm)
-    df = WPILogToDataFrame(reader)
-
-qwop = defineMetrics()
-aaa = {}
-for key in qwop.keys():
-    aaa[key] = qwop[key](df)
-print(aaa)

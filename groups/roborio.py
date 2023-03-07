@@ -11,21 +11,9 @@ boolConv = lambda x: x.replace({"true": 1, "false": 0})
 def defineMetrics() -> Dict[str, Callable[[pd.DataFrame], Tuple[int, str]]]:
     """Returns a list of the metrics contained in this group and their corresponding functions."""
     return {
-        "ADIS Yaw ?Norm Error? P-val": ProcessImuYawAngleNormADIS,
-        "ADIS Yaw DpM": ProcessImuYawAngleDriftADIS,
-        "ADIS Max Temperature": ProcessADISTemp,
         "Pigeon Yaw ?Norm Error? P-val": ProcessImuYawAngleNormPigeon,
         "Pigeon Yaw DpM": ProcessImuYawAngleDriftPigeon,
     }
-
-
-def ProcessImuYawAngleNormADIS(robotTelemetry: pd.DataFrame) -> Tuple[int, str]:
-    return ProcessImuYawAngleNorm("gyro", robotTelemetry)
-
-
-def ProcessImuYawAngleDriftADIS(robotTelemetry: pd.DataFrame) -> Tuple[int, str]:
-    return ProcessImuYawAngleDrift("gyro", robotTelemetry)
-
 
 def ProcessImuYawAngleNormPigeon(robotTelemetry: pd.DataFrame) -> Tuple[int, str]:
     return ProcessImuYawAngleNorm("pigeon", robotTelemetry)
