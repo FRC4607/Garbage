@@ -3,6 +3,7 @@ from wpilog.dlutil import WPILogToDataFrame
 from typing import Dict, List, Tuple
 import mmap
 
+import math
 import pandas as pd
 import numpy as np
 from typing import Callable, Dict, Tuple
@@ -12,15 +13,15 @@ pd.options.mode.chained_assignment = None
 def defineMetrics() -> Dict[str, Callable[[pd.DataFrame], Tuple[int, str]]]:
     """Returns a list of the metrics contained in this group and their corresponding functions."""
     return {
-        "Avg Arm Error": ProcessAverageArmError,
-        "Max Arm Current": ProcessMaxCurrent,
-        "Avg Arm Current": ProcessAverageCurrent,
-        "Max Arm Temperature": ProcessMaxMotorTemp,
-        "Avg Arm Temperature": ProcessAvgMotorTemp
+        "Median Elevator Error": ProcessAverageElevatorError,
+        "Max Elevator Current": ProcessMaxCurrent,
+        "Avg Elevator Current": ProcessAverageCurrent,
+        "Max Elevator Temperature": ProcessMaxMotorTemp,
+        "Avg Elevator Temperature": ProcessAvgMotorTemp
     }
 
-def ProcessAverageArmError(robotTelemetry: pd.DataFrame) -> Tuple[int, str]:
-    """Checks the mean error of a motor in the swerve drive. Returns the mean value for motor-specific processing.
+def ProcessAverageElevatorError(robotTelemetry: pd.DataFrame) -> Tuple[int, str]:
+    """Checks the mean error of the elevator's motor.
     Args:
         processKey: The key of the process variable to test
         setpointKey: The key of the setpoint the process variable is trying to track
@@ -32,10 +33,10 @@ def ProcessAverageArmError(robotTelemetry: pd.DataFrame) -> Tuple[int, str]:
         None
     """
     # Grab data
-    process = robotTelemetry[robotTelemetry["Key"] == "/arm/absolute/velocity"]
+    process = robotTelemetry[robotTelemetry["Key"] == "/elevator/motor/velocity"]
     if process.empty:
         return -1, "metric_not_implemented"
-    setpoint = robotTelemetry[robotTelemetry["Key"] == "/arm/setpoint/velocity"]
+    setpoint = robotTelemetry[robotTelemetry["Key"] == "/elevator/setpoint/velocity"]
     if setpoint.empty:
         return -1, "metric_not_implemented"
     fmsMode = robotTelemetry[robotTelemetry["Key"] == "DS:enabled"]
@@ -81,8 +82,6 @@ def ProcessAverageArmError(robotTelemetry: pd.DataFrame) -> Tuple[int, str]:
     df = pd.DataFrame({"Proc": processSeries, "Set": setpointSeries})
     # Interpolate
     df = df.interpolate(limit_process="both")
-    # Remove anywhere where the setpoint is 0.
-    df = df[df["Set"] != 0.0]
     # Calculate error
     df["Error"] = df["Proc"] - df["Set"]
     # Filter values three standard deviations away from mean and get the maximum
@@ -90,16 +89,17 @@ def ProcessAverageArmError(robotTelemetry: pd.DataFrame) -> Tuple[int, str]:
     # Get rid of outliers
     df = df[abs(df["Error"] - df["Error"].mean()) <= threeStd]
     # Get the mean
-    mean = df["Error"].mean()
-    if mean >= 12:
-        return 2, f"{mean} deg"
-    elif mean >= 6:
-        return 1, f"{mean} deg"
-    if mean < 6:
-        return 0, f"{mean} deg"
+    mean = df["Error"].median()
+    circ = 3 * math.pi
+    if abs(mean) >= (1 / circ):
+        return 2, f"{mean * circ} inches/sec"
+    elif abs(mean) >= (0.75 / circ):
+        return 1, f"{mean * circ} inches/sec"
+    else:
+        return 0, f"{mean * circ} inches/sec"
 
 def ProcessMaxCurrent(robotTelemetry: pd.DataFrame) -> Tuple[int, str]:
-    """Process the maximum current draw of a swerve drive motor and uses it to determine a severity.
+    """Process the maximum current draw of the elevator's motor and uses it to determine a severity.
 
     Args:
         motorKey: The motor key to check
@@ -112,7 +112,7 @@ def ProcessMaxCurrent(robotTelemetry: pd.DataFrame) -> Tuple[int, str]:
         None
 
     """
-    currents = robotTelemetry[robotTelemetry["Key"] == "/arm/motor/current"]
+    currents = robotTelemetry[robotTelemetry["Key"] == "/elevator/motor/current"]
     if currents.empty:
         return -1, "metric_not_implemented"
     currents["Value"] = pd.to_numeric(currents["Value"])
@@ -129,7 +129,7 @@ def ProcessMaxCurrent(robotTelemetry: pd.DataFrame) -> Tuple[int, str]:
 def ProcessAverageCurrent(
         robotTelemetry: pd.DataFrame
 ) -> Tuple[int, str]:
-    """Process the average current draw of a swerve drive motor and uses it to determine a severity.
+    """Process the average current draw of the elevator's motor and uses it to determine a severity.
 
     Args:
         motorKey: The motor key to check
@@ -142,10 +142,10 @@ def ProcessAverageCurrent(
         None
 
     """
-    currents = robotTelemetry[robotTelemetry["Key"] == f"/arm/motor/current"]
+    currents = robotTelemetry[robotTelemetry["Key"] == f"/elevator/motor/current"]
     if currents.empty:
         return -1, "metric_not_implemented"
-    outputs = robotTelemetry[robotTelemetry["Key"] == f"/arm/motor/output"]
+    outputs = robotTelemetry[robotTelemetry["Key"] == f"/elevator/motor/output"]
     if outputs.empty:
         return -1, "metric_not_implemented"
     currents = pd.to_numeric(currents["Value"])
@@ -166,7 +166,7 @@ def ProcessAverageCurrent(
     return stoplight, f"{avgCurrent} A"
 
 def ProcessMaxMotorTemp(robotTelemetry: pd.DataFrame) -> Tuple[int, str]:
-    """Checks the temperature of a motor in the swerve drive
+    """Checks the temperature of the elevator's motor
     Args:
         moduleKey: The key of the motor to check alignment for
         robotTelemetry: Pandas dataframe of robot telemetry
@@ -177,7 +177,7 @@ def ProcessMaxMotorTemp(robotTelemetry: pd.DataFrame) -> Tuple[int, str]:
         None
     """
     # Grab data
-    values = robotTelemetry[robotTelemetry["Key"] == f"/arm/motor/temp"]
+    values = robotTelemetry[robotTelemetry["Key"] == f"/elevator/motor/temp"]
     if values.empty:
         return -1, "metric_not_implemented"
     # Cut out the garbage data at the beginning
@@ -204,7 +204,7 @@ def ProcessAvgMotorTemp(robotTelemetry: pd.DataFrame) -> Tuple[int, str]:
         None
     """
     # Grab data
-    values = robotTelemetry[robotTelemetry["Key"] == f"/arm/motor/temp"]
+    values = robotTelemetry[robotTelemetry["Key"] == f"/elevator/motor/temp"]
     if values.empty:
         return -1, "metric_not_implemented"
     # Cut out the garbage data at the beginning
@@ -219,7 +219,7 @@ def ProcessAvgMotorTemp(robotTelemetry: pd.DataFrame) -> Tuple[int, str]:
         stoplight = 1
     return stoplight, f"{avgTemp} °C"
 
-with open("FRC_20230304_215647.wpilog", "r") as f:
+with open("FRC_20230310_164242_NDGF_Q15.wpilog", "r") as f:
     mm = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
     reader = DataLogReader(mm)
     df = WPILogToDataFrame(reader)

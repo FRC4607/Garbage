@@ -180,7 +180,7 @@ def ProcessTurningEncoderAlignment(
     if neoEncoder.empty:
         return -1, "metric_not_implemented"
     absEncoder = robotTelemetry[
-        robotTelemetry["Key"] == f"/swerve/{moduleKey}/turn_enc/absolute"
+        robotTelemetry["Key"] == f"/swerve/{moduleKey}/turn/absolute"
     ]
     if absEncoder.empty:
         return -1, "metric_not_implemented"
@@ -218,6 +218,8 @@ def ProcessTurningEncoderAlignment(
     test = pd.DataFrame({"ABS": absEncoder["Value"], "NEO": neoEncoder["Value"]})
     # Interpolate
     test = test.interpolate(limit_direction="both")
+    # Wrap NEO Encoder between 0 and 2pi
+    test["NEO"] = test["NEO"] % (2 * math.pi)
     # Compute error
     test["Error"] = (test["ABS"] - test["NEO"]).abs()
     # Get rid of values three standard deviations away from the mean
