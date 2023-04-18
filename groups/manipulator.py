@@ -32,7 +32,7 @@ def ProcessMaxCurrent(robotTelemetry: pd.DataFrame) -> Tuple[int, str]:
         return -1, "metric_not_implemented"
     currents["Value"] = pd.to_numeric(currents["Value"])
     # Find the mean
-    maxCurrent = currents["Value"].max()
+    maxCurrent = (np.convolve(currents["Value"].to_numpy(), np.ones(50), "valid") / 50).max()
     stoplight = 0
     if maxCurrent > 50:
         stoplight = 2

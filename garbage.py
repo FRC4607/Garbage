@@ -40,12 +40,15 @@ def getInfoFromLogName(name: str) -> LogFileInfo:
     if parts[1] == "TBD":
         return LogFileInfo(fileName=name)
     # Calculate this log's datetime and then convert it to the local time.
-    dt = (
-        datetime.datetime.strptime(f"{parts[1]}_{parts[2]}", "%Y%m%d_%H%M%S")
-        .replace(tzinfo=datetime.timezone.utc)
-        .astimezone()
-    )
-    print(dt)
+    try:
+        dt = (
+            datetime.datetime.strptime(f"{parts[1]}_{parts[2]}", "%Y%m%d_%H%M%S")
+            .replace(tzinfo=datetime.timezone.utc)
+            .astimezone()
+        )
+        print(dt)
+    except:
+        return LogFileInfo()
     # If our log is just a datetime, return that.
     if len(parts) == 3:
         return LogFileInfo(fileName=name, dt=dt)
@@ -57,15 +60,15 @@ def analyze_and_upload(path: str):
     print(f'Starting analysis of "{path}".')
     # Open the log file and take its hash.
     file_hash: bytes = bytes([])
-    try:
-        with open(path, "r") as f:
-            mm = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
-            file_hash = hashlib.md5(mm).digest()
-            reader = DataLogReader(mm)
-            df = WPILogToDataFrame(reader)
-    except:
-        print(f"Opening of {path} failed. Skipping.")
-        return
+    # try:
+    with open(path, "r") as f:
+        mm = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
+        file_hash = hashlib.md5(mm).digest()
+        reader = DataLogReader(mm)
+        df = WPILogToDataFrame(reader)
+    # except:
+        # print(f"Opening of {path} failed. Skipping.")
+        # return
 
     # Do this after we open the file to make sure the file format
     info = getInfoFromLogName(os.path.basename(path))
@@ -73,37 +76,37 @@ def analyze_and_upload(path: str):
     # Loop over each module/group and run its metrics.
     results: Dict[str, GroupInfo] = {}
 
-    try:
-        for group in groupsList:
-            # Reset the metrics dictionary
-            group.metrics = {}
+    #try:
+    for group in groupsList:
+        # Reset the metrics dictionary
+        group.metrics = {}
 
-            # Check to see if we have already ran the same metrics on the same log.
-            with open(group.module.__file__, "rb") as f:
-                group.hash = hashlib.file_digest(f, "md5").digest()
-            with Session(engine) as sess:
-                statement = (
-                    Select(Metric.id)
-                    .where(Metric.file_hash == file_hash)
-                    .where(Metric.metric_hash == group.hash)
-                )
-                prevMetrics = sess.scalar(statement)
+        # Check to see if we have already ran the same metrics on the same log.
+        with open(group.module.__file__, "rb") as f:
+            group.hash = hashlib.file_digest(f, "md5").digest()
+        with Session(engine) as sess:
+            statement = (
+                Select(Metric.id)
+                .where(Metric.file_hash == file_hash)
+                .where(Metric.metric_hash == group.hash)
+            )
+            prevMetrics = sess.scalar(statement)
 
-            if prevMetrics is None:
-                # Run the metrics and store them
-                metrics = group.module.defineMetrics()
-                for metric in metrics.keys():
-                    severity, result = metrics[metric](df)
-                    group.metrics[metric] = (severity, result)
-                results[group.name] = group
-            else:
-                print(
-                    f'Metrics in group "{group.name}" already ran on this file. Skipping.'
-                )
-                continue
-    except:
-        print(f"Metrics failed to run on file {path}. Skipping.")
-        return
+        if prevMetrics is None:
+            # Run the metrics and store them
+            metrics = group.module.defineMetrics()
+            for metric in metrics.keys():
+                severity, result = metrics[metric](df)
+                group.metrics[metric] = (severity, result)
+            results[group.name] = group
+        else:
+            print(
+                f'Metrics in group "{group.name}" already ran on this file. Skipping.'
+            )
+            continue
+    #except:
+        #print(f"Metrics failed to run on file {path}. Skipping.")
+        #return
 
     # Convert metrics to JSON
     try:

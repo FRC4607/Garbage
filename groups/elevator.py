@@ -28,10 +28,10 @@ def ProcessAverageElevatorError(robotTelemetry: pd.DataFrame) -> Tuple[int, str]
         None
     """
     # Grab data
-    process = robotTelemetry[robotTelemetry["Key"] == "/elevator/motor/velocity"]
+    process = robotTelemetry[robotTelemetry["Key"] == "/elevator/encoder/position"]
     if process.empty:
         return -1, "metric_not_implemented"
-    setpoint = robotTelemetry[robotTelemetry["Key"] == "/elevator/setpoint/velocity"]
+    setpoint = robotTelemetry[robotTelemetry["Key"] == "/elevator/setpoint/position"]
     if setpoint.empty:
         return -1, "metric_not_implemented"
     fmsMode = robotTelemetry[robotTelemetry["Key"] == "DS:enabled"]
@@ -107,12 +107,12 @@ def ProcessMaxCurrent(robotTelemetry: pd.DataFrame) -> Tuple[int, str]:
         None
 
     """
-    currents = robotTelemetry[robotTelemetry["Key"] == "/elevator/motor/current"]
+    currents = robotTelemetry[robotTelemetry["Key"] == "/elevator/backMotor/current"]
     if currents.empty:
         return -1, "metric_not_implemented"
     currents["Value"] = pd.to_numeric(currents["Value"])
-    # Find the mean
-    maxCurrent = currents["Value"].max()
+    # Find the mean (1 sec moving average)
+    maxCurrent = (np.convolve(currents["Value"].to_numpy(), np.ones(50), "valid") / 50).max()
     stoplight = 0
     if maxCurrent > 45:
         stoplight = 2
@@ -137,10 +137,10 @@ def ProcessAverageCurrent(
         None
 
     """
-    currents = robotTelemetry[robotTelemetry["Key"] == f"/elevator/motor/current"]
+    currents = robotTelemetry[robotTelemetry["Key"] == f"/elevator/backMotor/current"]
     if currents.empty:
         return -1, "metric_not_implemented"
-    outputs = robotTelemetry[robotTelemetry["Key"] == f"/elevator/motor/output"]
+    outputs = robotTelemetry[robotTelemetry["Key"] == f"/elevator/backMotor/output"]
     if outputs.empty:
         return -1, "metric_not_implemented"
     currents = pd.to_numeric(currents["Value"])
@@ -172,7 +172,7 @@ def ProcessMaxMotorTemp(robotTelemetry: pd.DataFrame) -> Tuple[int, str]:
         None
     """
     # Grab data
-    values = robotTelemetry[robotTelemetry["Key"] == f"/elevator/motor/temp"]
+    values = robotTelemetry[robotTelemetry["Key"] == f"/elevator/backMotor/temp"]
     if values.empty:
         return -1, "metric_not_implemented"
     # Cut out the garbage data at the beginning
@@ -199,7 +199,7 @@ def ProcessAvgMotorTemp(robotTelemetry: pd.DataFrame) -> Tuple[int, str]:
         None
     """
     # Grab data
-    values = robotTelemetry[robotTelemetry["Key"] == f"/elevator/motor/temp"]
+    values = robotTelemetry[robotTelemetry["Key"] == f"/elevator/backMotor/temp"]
     if values.empty:
         return -1, "metric_not_implemented"
     # Cut out the garbage data at the beginning

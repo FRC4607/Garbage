@@ -97,8 +97,8 @@ def ProcessMaxCurrentDraw(robotTelemetry: pd.DataFrame) -> Tuple[int, str]:
     totalCurrents = np.stack(totalCurrents)
     # Sum up the per channel current draws into one total value
     totalCurrents = totalCurrents.sum(axis=1)
-    # Get the highest value
-    maxCurrent = totalCurrents.max()
+    # Get the highest value (use a moving average with 50 values, or 1 second)
+    maxCurrent = (np.convolve(totalCurrents, np.ones(50), "valid") / 50).max()
     stoplight = 0
     if maxCurrent > 120:
         stoplight = 2
